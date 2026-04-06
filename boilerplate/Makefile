@@ -9,7 +9,7 @@ WORKLOAD_LDFLAGS ?= -static
 
 USER_TARGETS := engine memory_hog cpu_hog io_pulse
 
-all: $(USER_TARGETS) module
+all: $(USER_TARGETS) # module
 
 ci: WORKLOAD_LDFLAGS =
 ci: $(USER_TARGETS)
