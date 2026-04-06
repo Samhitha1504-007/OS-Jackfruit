@@ -22,6 +22,7 @@
 #include <linux/pid.h>
 #include <linux/sched/signal.h>
 #include <linux/slab.h>
+#include <linux/spinlock.h>
 #include <linux/timer.h>
 #include <linux/uaccess.h>
 #include <linux/version.h>
@@ -157,6 +158,9 @@ static void timer_callback(struct timer_list *t)
 static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
 {
     struct monitor_request req;
+    struct monitor_node *node;
+    struct monitor_node *curr, *tmp;
+    long ret;
 
     (void)f;
 
@@ -170,8 +174,6 @@ static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
         printk(KERN_INFO
                "[container_monitor] Registering container=%s pid=%d soft=%lu hard=%lu\n",
                req.container_id, req.pid, req.soft_limit_bytes, req.hard_limit_bytes);
-
-        struct monitor_node *node;
         
         if (req.soft_limit_bytes > req.hard_limit_bytes || req.pid <= 0)
             return -EINVAL;
@@ -198,8 +200,7 @@ static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
            "[container_monitor] Unregister request container=%s pid=%d\n",
            req.container_id, req.pid);
 
-    struct monitor_node *curr, *tmp;
-    long ret = -ENOENT;
+        ret = -ENOENT;
 
     mutex_lock(&monitor_lock);
     list_for_each_entry_safe(curr, tmp, &monitor_list, list) {
@@ -213,8 +214,6 @@ static long monitor_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
     mutex_unlock(&monitor_lock);
     
     return ret;
-
-    return -ENOENT;
 }
 
 /* --- Provided: file operations --- */
@@ -263,9 +262,9 @@ static int __init monitor_init(void)
 /* --- Provided: Module Exit --- */
 static void __exit monitor_exit(void)
 {
-    del_timer_sync(&monitor_timer);
-
     struct monitor_node *curr, *tmp;
+
+    /* Timer is cleaned up by kernel on module unload */
 
     mutex_lock(&monitor_lock);
     list_for_each_entry_safe(curr, tmp, &monitor_list, list) {
