@@ -4,8 +4,8 @@ This repository contains a supervised multi-container runtime in C and a Linux k
 
 ## 1. Team Information
 
-- Team Member 1: <Name>, <SRN>
-- Team Member 2: <Name>, <SRN>
+- Team Member 1: Samhitha S, PES1UG24CS411
+- Team Member 2: Sanchita Sunil, PES1UG24CS419
 
 ## 2. Build, Load, and Run Instructions
 
